@@ -14,8 +14,11 @@ mycursor = mydb.cursor()
 # Load the CSV file into a pandas DataFrame
 df = pd.read_csv("dataCrawl.csv", skiprows=1)
 
+# Get the top 1000 rows and reset the index
+df_top1000 = df.head(1000).reset_index(drop=True)
+
 # Loop over the rows in the DataFrame
-for _, row in df.iterrows():
+for _, row in df_top1000.iterrows():
     # Prepare an insert statement
     sql = """
     INSERT INTO product_info (product_name, original_price, discounted_price, discount_rate, image_link, search_keyword, purchase_link)

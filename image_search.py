@@ -11,7 +11,7 @@ import mysql.connector
 
 # Database credentials
 user = "root"
-password = "password"
+password = "0705"
 database = "fashonApp"
 
 # Model Loading
@@ -42,7 +42,7 @@ def predict_category(image_url):
 
     return category
 
-def get_products_from_category(category):
+def get_products_from_category(category, image_url):
     # Connect to DB
     mydb = mysql.connector.connect(
         host="localhost",
@@ -53,14 +53,22 @@ def get_products_from_category(category):
 
     mycursor = mydb.cursor()
 
+    # Check if the image url exists in the database
+    mycursor.execute(f"SELECT * FROM product_info WHERE image_link = '{image_url}'")
+    exact_match = mycursor.fetchone()
+
+    # If exact match found, print it
+    if exact_match:
+        print('Exact match:', exact_match)
+
     # Execute SQL query to get products from predicted category
-    mycursor.execute(f"SELECT pi.* FROM product_info pi JOIN predicted_categories pc ON pi.image_link = pc.image_link WHERE pc.category = '{category}'")
+    mycursor.execute(f"SELECT * FROM product_info WHERE image_link != '{image_url}' AND id IN (SELECT pi.id FROM product_info pi JOIN predicted_categories pc ON pi.image_link = pc.image_link WHERE pc.category = '{category}')")
 
     # Fetch all products
     products = mycursor.fetchall()
 
     # Select 10 random products
-    random_products = random.sample(products, 10)
+    random_products = random.sample(products, min(10, len(products)))
 
     return random_products
 
@@ -70,6 +78,6 @@ predicted_category = predict_category(image_url)
 print('Predicted category:', predicted_category)
 
 # Fetch 10 random products from the predicted category
-products = get_products_from_category(predicted_category)
+products = get_products_from_category(predicted_category, image_url)
 for product in products:
     print(product)
